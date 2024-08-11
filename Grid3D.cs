@@ -6,14 +6,12 @@ public class Grid3D
     private Vector3 _center;
     private float _cellSize;
     private HashSet<Vector3Int> _occupiedCells;
-    private int _gizmoSize;
     private SortedSet<(float distance, Vector3Int position)> _availablePositions;
 
-    public Grid3D(Vector3 center, float cellSize, int gizmoSize)
+    public Grid3D(Vector3 center, float cellSize)
     {
         _center = center;
         _cellSize = cellSize;
-        _gizmoSize = gizmoSize;
         _occupiedCells = new HashSet<Vector3Int>();
         _availablePositions = new SortedSet<(float, Vector3Int)>(Comparer<(float, Vector3Int)>.Create((a, b) =>
         {
@@ -74,11 +72,11 @@ public class Grid3D
         return GridToWorld(gridPosition);
     }
 
-    public Vector3 GetNextOpenPosition()
+    public Vector3 OccupyNextAvailablePosition()
     {
         while (_availablePositions.Count > 0)
         {
-            var nextPosition = _availablePositions.Min;
+            (float distance, Vector3Int position) nextPosition = _availablePositions.Min;
             _availablePositions.Remove(nextPosition);
             if (!_occupiedCells.Contains(nextPosition.position))
             {
@@ -88,7 +86,12 @@ public class Grid3D
             }
         }
 
-        return Vector3.zero; // Fallback if no position found
+        return Vector3.zero;
+    }
+
+    public (float distance, Vector3Int position ) GetNextAvailablePosition()
+    {
+        return _availablePositions.Min;
     }
 
     private void UpdateAvailablePositions(Vector3Int occupiedPosition)
@@ -120,15 +123,16 @@ public class Grid3D
 
     public void OnDrawGizmosSelected()
     {
+        const int gizmoCells = 5;
         Gizmos.color = Color.white;
         Gizmos.DrawWireCube(_center,
-            new Vector3(_gizmoSize * _cellSize, _gizmoSize * _cellSize, _gizmoSize * _cellSize));
+            new Vector3(gizmoCells * _cellSize, gizmoCells * _cellSize, gizmoCells * _cellSize));
 
-        for (int x = -_gizmoSize / 2; x <= _gizmoSize / 2; x++)
+        for (int x = -gizmoCells / 2; x <= gizmoCells / 2; x++)
         {
-            for (int y = -_gizmoSize / 2; y <= _gizmoSize / 2; y++)
+            for (int y = -gizmoCells / 2; y <= gizmoCells / 2; y++)
             {
-                for (int z = -_gizmoSize / 2; z <= _gizmoSize / 2; z++)
+                for (int z = -gizmoCells / 2; z <= gizmoCells / 2; z++)
                 {
                     Vector3Int gridPosition = new Vector3Int(x, y, z);
                     Vector3 worldPosition = GridToWorld(gridPosition);
